@@ -4,29 +4,33 @@ import { useFirebase } from "../context/Firebase"; // Use context to access Fire
 
 const EmergencyAlert = () => {
     const { db } = useFirebase(); // Access db from context
-    const [alertMessage, setAlertMessage] = useState("");
+    const [emergencyPhone, setEmergencyPhone] = useState("");
     const [emergencyContact, setEmergencyContact] = useState("");
+    const [emergencyMessage, setEmergencyMessage] = useState(""); // New state for optional message
     const [successMessage, setSuccessMessage] = useState("");
 
     // Send emergency alert to Firestore
     const sendEmergencyAlert = async () => {
-        if (!alertMessage || !emergencyContact) {
-            alert("Please enter an alert message and emergency contact.");
+        if (!emergencyPhone || !emergencyContact) {
+            alert("Please enter an emergency phone number and emergency contact.");
             return;
         }
 
         try {
-            // Send alert to Firestore
-            await addDoc(collection(db, "alerts"), {
-                message: alertMessage,
-                timestamp: new Date(),
+            // Send data to Firestore
+            await addDoc(collection(db, "emergency"), {
+                phone: emergencyPhone, // Store phone number
                 contact: emergencyContact, // Include contact for reference
+                message: emergencyMessage, // Store optional emergency message
+                isSent: false, // New parameter to indicate alert status
+                timestamp: new Date(), // Store timestamp
             });
 
-            setSuccessMessage("🚨 Emergency alert sent successfully!");
+            setSuccessMessage("🚨 Emergency contact sent successfully!");
             // Clear input fields
-            setAlertMessage("");
+            setEmergencyPhone("");
             setEmergencyContact("");
+            setEmergencyMessage(""); // Clear optional message
         } catch (error) {
             console.error("Error sending emergency alert:", error);
             alert("Failed to send emergency alert. Please try again.");
@@ -38,9 +42,9 @@ const EmergencyAlert = () => {
             <h1 style={styles.heading}>🚨 Emergency Alert</h1>
             <input
                 type="text"
-                value={alertMessage}
-                onChange={(e) => setAlertMessage(e.target.value)}
-                placeholder="Type emergency message"
+                value={emergencyPhone}
+                onChange={(e) => setEmergencyPhone(e.target.value)}
+                placeholder="Emergency Phone Number"
                 style={styles.input}
             />
             <input
@@ -48,6 +52,13 @@ const EmergencyAlert = () => {
                 value={emergencyContact}
                 onChange={(e) => setEmergencyContact(e.target.value)}
                 placeholder="Emergency Contact Email"
+                style={styles.input}
+            />
+            <input
+                type="text"
+                value={emergencyMessage}
+                onChange={(e) => setEmergencyMessage(e.target.value)}
+                placeholder=" Emergency Message(If Any)"
                 style={styles.input}
             />
             <button onClick={sendEmergencyAlert} style={styles.button}>
@@ -91,9 +102,6 @@ const styles = {
         boxShadow: '0 2px 10px rgba(0, 0, 0, 0.1)',
         transition: 'border-color 0.3s',
     },
-    inputFocus: {
-        borderColor: '#007bff',
-    },
     button: {
         padding: '15px 30px',
         borderRadius: '30px',
@@ -103,9 +111,6 @@ const styles = {
         fontSize: '1.2rem',
         cursor: 'pointer',
         transition: 'transform 0.2s, background-color 0.3s',
-    },
-    buttonHover: {
-        transform: 'scale(1.05)',
     },
     success: {
         marginTop: '20px',

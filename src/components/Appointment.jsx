@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useFirebase } from '../context/Firebase';
 import { collection, getDocs, updateDoc, doc, deleteDoc, addDoc, getDoc } from 'firebase/firestore';
+import { ZegoUIKitPrebuilt } from '@zegocloud/zego-uikit-prebuilt';
 import './Appointment.css';
 
 const Appointments = () => {
@@ -9,7 +10,8 @@ const Appointments = () => {
   const [acceptedAppointments, setAcceptedAppointments] = useState([]);
   const [loading, setLoading] = useState(true);
   const [selectedTimes, setSelectedTimes] = useState({});
-  const [statusUpdates, setStatusUpdates] = useState({}); // Track status updates for appointments
+  const [statusUpdates, setStatusUpdates] = useState({});
+  const [videoCallUrls, setVideoCallUrls] = useState({});
 
   // Fetch appointment requests and accepted appointments from Firestore
   useEffect(() => {
@@ -47,10 +49,26 @@ const Appointments = () => {
     fetchAppointments();
   }, [db]);
 
-  // Handle appointment acceptance with selected time
+  // Function to generate a ZEGOCLOUD video call URL
+  const generateVideoCallUrl = async (appointmentId) => {
+    const appID = '1764494396'; // Replace with your ZEGOCLOUD App ID
+    const serverSecret = '035b33ebeb11f47504c0d059444bc233'; // Replace with your ZEGOCLOUD Server Secret
+    const userID = `user_${appointmentId}`;
+    const roomID = `room_${appointmentId}`;
+    
+    const kitToken = ZegoUIKitPrebuilt.generateKitTokenForTest(appID, serverSecret, roomID, userID, userID);
+    
+    console.log('Generated Kit Token:', kitToken); // Debugging line
+
+    const zegoCall = ZegoUIKitPrebuilt.create(kitToken);
+    
+    return zegoCall;
+  };
+
+  // Handle appointment acceptance with selected time and video call
   const acceptAppointment = async (id, appointment) => {
     try {
-      const selectedTime = selectedTimes[id]; // Get the time selected by the user
+      const selectedTime = selectedTimes[id];
       if (!selectedTime) {
         alert('Please select a time before accepting the appointment.');
         return;
@@ -60,21 +78,24 @@ const Appointments = () => {
       const newAppointment = {
         ...appointment,
         status: 'Accepted',
-        time: selectedTime, // Use the selected time
+        time: selectedTime,
       };
 
-      // Move the appointment to the 'Appointment' collection and delete from 'AppointmentRequest'
       const appointmentCollection = collection(db, 'Appointment');
       await addDoc(appointmentCollection, newAppointment);
       await deleteDoc(appointmentRef);
 
-      // Update status locally to "Accepted"
+      const zegoCall = await generateVideoCallUrl(id);
+      setVideoCallUrls((prevUrls) => ({
+        ...prevUrls,
+        [id]: zegoCall,
+      }));
+
       setStatusUpdates({
         ...statusUpdates,
         [id]: 'Accepted',
       });
 
-      // Add the accepted appointment to the acceptedAppointments state
       setAcceptedAppointments([...acceptedAppointments, newAppointment]);
       setAppointmentRequests(appointmentRequests.filter(req => req.id !== id));
     } catch (error) {
@@ -88,13 +109,11 @@ const Appointments = () => {
       const appointmentRef = doc(db, 'AppointmentRequest', id);
       await deleteDoc(appointmentRef);
 
-      // Update status locally to "Rejected"
       setStatusUpdates({
         ...statusUpdates,
         [id]: 'Rejected',
       });
 
-      // Remove the rejected appointment from appointmentRequests state
       setAppointmentRequests(appointmentRequests.filter(req => req.id !== id));
     } catch (error) {
       console.error('Error rejecting appointment: ', error);
@@ -105,7 +124,7 @@ const Appointments = () => {
   const handleTimeChange = (id, event) => {
     setSelectedTimes({
       ...selectedTimes,
-      [id]: event.target.value, // Store the selected time for the specific appointment
+      [id]: event.target.value,
     });
   };
 
@@ -121,7 +140,6 @@ const Appointments = () => {
           <p>No appointment requests available</p>
         ) : (
           appointmentRequests.map(({ id, patientName, doctoruid, appointmentType, date, status }) => {
-            // Convert timestamp to a readable date string
             const formattedDate = date?.toDate().toLocaleString('en-IN', {
               year: 'numeric',
               month: 'long',
@@ -131,7 +149,7 @@ const Appointments = () => {
             });
 
             return (
-              <div key={id} className="appointment-card">
+              <div key={`request-${id}`} className="appointment-card">
                 <h2>Patient: {patientName}</h2>
                 <p><strong>Doctor UID:</strong> {doctoruid}</p>
                 <p><strong>Appointment Type:</strong> {appointmentType}</p>
@@ -173,7 +191,6 @@ const Appointments = () => {
           <p>No accepted appointments</p>
         ) : (
           acceptedAppointments.map(({ id, patientName, doctoruid, appointmentType, time }) => {
-            // Convert the time to a readable date string
             const formattedTime = new Date(time).toLocaleString('en-IN', {
               year: 'numeric',
               month: 'long',
@@ -183,11 +200,18 @@ const Appointments = () => {
             });
 
             return (
-              <div key={id} className="appointment-card">
+              <div key={`accepted-${id}`} className="appointment-card">
                 <h2>Patient: {patientName}</h2>
                 <p><strong>Doctor UID:</strong> {doctoruid}</p>
                 <p><strong>Appointment Type:</strong> {appointmentType}</p>
                 <p><strong>Time:</strong> {formattedTime}</p>
+                {videoCallUrls[id] && (
+                  <div className="video-call-section">
+                    <a href={videoCallUrls[id]} target="_blank" rel="noopener noreferrer" className="video-call-button">
+                      Start Video Call
+                    </a>
+                  </div>
+                )}
               </div>
             );
           })
