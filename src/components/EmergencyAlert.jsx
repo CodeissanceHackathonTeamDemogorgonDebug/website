@@ -6,6 +6,7 @@ const EmergencyAlert = () => {
     const { db } = useFirebase(); // Access db from context
     const [alertMessage, setAlertMessage] = useState("");
     const [emergencyContact, setEmergencyContact] = useState("");
+    const [successMessage, setSuccessMessage] = useState("");
 
     // Send emergency alert to Firestore
     const sendEmergencyAlert = async () => {
@@ -22,7 +23,7 @@ const EmergencyAlert = () => {
                 contact: emergencyContact, // Include contact for reference
             });
 
-            alert("Emergency alert sent successfully!");
+            setSuccessMessage("🚨 Emergency alert sent successfully!");
             // Clear input fields
             setAlertMessage("");
             setEmergencyContact("");
@@ -34,7 +35,7 @@ const EmergencyAlert = () => {
 
     return (
         <div style={styles.container}>
-            <h1 style={styles.heading}>Emergency Alert</h1>
+            <h1 style={styles.heading}>🚨 Emergency Alert</h1>
             <input
                 type="text"
                 value={alertMessage}
@@ -52,41 +53,65 @@ const EmergencyAlert = () => {
             <button onClick={sendEmergencyAlert} style={styles.button}>
                 Send Alert
             </button>
+            {successMessage && <p style={styles.success}>{successMessage}</p>}
         </div>
     );
 };
 
-// Styling for the Emergency Alert component
+// Enhanced Crazy Styling
 const styles = {
     container: {
         display: 'flex',
         flexDirection: 'column',
         alignItems: 'center',
-        padding: '20px',
-        backgroundColor: '#f8f9fa',
-        borderRadius: '10px',
-        boxShadow: '0 2px 10px rgba(0, 0, 0, 0.1)',
-        width: '300px',
-        margin: '20px auto',
+        padding: '30px',
+        backgroundColor: '#1d1f21',
+        borderRadius: '20px',
+        boxShadow: '0 10px 25px rgba(0, 0, 0, 0.3)',
+        width: '100%',
+        maxWidth: '400px',
+        margin: '40px auto',
+        animation: 'fadeIn 0.5s ease-in-out',
     },
     heading: {
+        fontSize: '2rem',
+        color: '#fff',
+        textAlign: 'center',
         marginBottom: '20px',
     },
     input: {
-        padding: '10px',
-        borderRadius: '5px',
-        border: '1px solid #ccc',
+        padding: '15px',
+        borderRadius: '10px',
+        border: '2px solid #ccc',
         width: '100%',
-        marginBottom: '10px',
+        marginBottom: '15px',
+        fontSize: '1.1rem',
+        backgroundColor: '#333',
+        color: '#fff',
+        boxShadow: '0 2px 10px rgba(0, 0, 0, 0.1)',
+        transition: 'border-color 0.3s',
+    },
+    inputFocus: {
+        borderColor: '#007bff',
     },
     button: {
-        padding: '10px',
-        borderRadius: '5px',
-        backgroundColor: '#28a745',
-        color: 'white',
+        padding: '15px 30px',
+        borderRadius: '30px',
         border: 'none',
+        background: 'linear-gradient(45deg, #ff0066, #ffcc33)',
+        color: 'white',
+        fontSize: '1.2rem',
         cursor: 'pointer',
-        transition: 'background-color 0.3s',
+        transition: 'transform 0.2s, background-color 0.3s',
+    },
+    buttonHover: {
+        transform: 'scale(1.05)',
+    },
+    success: {
+        marginTop: '20px',
+        fontSize: '1.2rem',
+        color: 'limegreen',
+        fontWeight: 'bold',
     },
 };
 
