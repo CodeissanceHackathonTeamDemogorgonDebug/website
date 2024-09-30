@@ -1,138 +1,124 @@
-import React, { useState, useEffect } from "react";
-import { FaHeartbeat, FaBed } from "react-icons/fa";
-import Navbar from "../components/Navbar";
-import { gapi } from "gapi-script";
-import { auth, provider } from "../context/Firebase"; 
-import { useFirebase } from "../context/Firebase";
-
-const CLIENT_ID = "YOUR_GOOGLE_CLIENT_ID";
-const API_KEY = "YOUR_GOOGLE_API_KEY";
-const SCOPES = "https://www.googleapis.com/auth/fitness.activity.read https://www.googleapis.com/auth/fitness.heart_rate.read https://www.googleapis.com/auth/fitness.sleep.read";
+import React, { useEffect, useState } from 'react';
+import './HealthData.css'; // Import custom CSS for styling
+import Navbar from '../components/Navbar';
+import { useFirebase } from '../context/Firebase'; // Import useFirebase to access Firestore
+import { collection, getDocs } from 'firebase/firestore';
+import {
+  LineChart,
+  Line,
+  XAxis,
+  YAxis,
+  Tooltip,
+  ResponsiveContainer,
+  BarChart,
+  Bar,
+  PieChart,
+  Pie,
+} from 'recharts';
 
 const HealthData = () => {
-  const [heartRate, setHeartRate] = useState(null);
-  const [sleepHours, setSleepHours] = useState(null);
-  const [sleepQuality, setSleepQuality] = useState(null);
-  const [user, setUser] = useState(null); // Track Firebase Auth user
+  const { db } = useFirebase();
+  const [healthMetrics, setHealthMetrics] = useState([]);
 
-  // Firebase Google Sign-in
-  const signInWithGoogle = () => {
-    auth
-      .signInWithPopup(provider)
-      .then((result) => {
-        setUser(result.user);
-        initializeGoogleFitAPI(); // Initialize Google Fit API after login
-      })
-      .catch((error) => {
-        console.error("Error during sign-in:", error);
-      });
-  };
-
-  // Initialize Google Fit API after user signs in
-  const initializeGoogleFitAPI = () => {
-    function start() {
-      gapi.client.init({
-        apiKey: API_KEY,
-        clientId: CLIENT_ID,
-        scope: SCOPES,
-        discoveryDocs: ["https://www.googleapis.com/discovery/v1/apis/fitness/v1/rest"],
-      });
-    }
-    gapi.load("client:auth2", start);
-  };
-
-  // Fetch health data from Google Fit
   const fetchHealthData = async () => {
     try {
-      const authInstance = gapi.auth2.getAuthInstance();
-      if (!authInstance.isSignedIn.get()) {
-        await authInstance.signIn();
-      }
+      const stepsSnapshot = await getDocs(collection(db, 'steps'));
+      const stepsData = stepsSnapshot.docs.map(doc => doc.data());
+      
+      // Assuming you want to calculate total steps
+      const totalSteps = stepsData.reduce((acc, curr) => acc + curr.steps, 0); // Adjust based on your data structure
 
-      // Fetch heart rate data
-      const heartRateData = await gapi.client.fitness.users.dataSources.datasets.get({
-        userId: "me",
-        dataSourceId: "derived:com.google.heart_rate.bpm:com.google.android.gms:merge_heart_rate_bpm",
-        datasetId: "startTime-endTime",
-      });
-      setHeartRate(heartRateData.point[0]?.value[0]?.fpVal || "N/A");
-
-      // Fetch sleep data
-      const sleepData = await gapi.client.fitness.users.dataSources.datasets.get({
-        userId: "me",
-        dataSourceId: "derived:com.google.sleep.segment:com.google.android.gms:merge_sleep_segments",
-        datasetId: "startTime-endTime",
-      });
-      const sleepHours = calculateSleepHours(sleepData);
-      setSleepHours(sleepHours);
-      setSleepQuality(sleepHours >= 7 ? "Good" : "Poor");
+      // Update health metrics state with the fetched data
+      const updatedMetrics = [
+        { title: 'Steps', value: totalSteps.toLocaleString(), goal: '61%', chart: [7500, 9000, 7500, 5000, 6500, 7000, totalSteps], unit: '', color: 'blue' },
+        { title: 'Heart Rate', value: '61 bpm', goal: '', chart: [60, 65, 63, 62, 64, 61], unit: 'bpm', color: 'red' },
+        { title: 'Stress', value: '59 %', goal: '59%', chart: [60, 55, 60, 58, 63, 60], unit: '%', color: 'orange' },
+        { title: 'Calories', value: '1893 kcal', goal: '95%', chart: [1700, 1800, 1600, 1900, 2000, 1700], unit: 'kcal', color: 'yellow' },
+        { title: 'Water', value: '2.0 L', goal: '79%', chart: [1800, 2000, 1600, 1500, 2000, 1700], unit: 'L', color: 'lightblue' },
+        { title: 'Sleep', value: '7 hours', goal: '88%', chart: [6, 7, 8, 5, 7, 6], unit: 'hours', color: 'purple' },
+        { title: 'Oxygen', value: '97 %', goal: '', chart: [100, 98, 97, 99, 97, 98], unit: '%', color: 'green' },
+        { title: 'Temperature', value: '36.8 °C', goal: '', chart: [36.8, 36.7, 36.9, 36.8, 36.8], unit: '°C', color: 'red' },
+        { title: 'Weight', value: '67.9 kg', goal: '', chart: [68, 67.9, 68, 67.8, 67.9], unit: 'kg', color: 'purple' },
+      ];
+      
+      setHealthMetrics(updatedMetrics);
     } catch (error) {
-      console.error("Error fetching Google Fit data:", error);
+      console.error("Error fetching health data: ", error);
     }
-  };
-
-  const calculateSleepHours = (sleepData) => {
-    // Implement logic to calculate sleep hours from the data points returned
-    return 7.5; // Placeholder logic for demo
   };
 
   useEffect(() => {
-    if (user) {
-      fetchHealthData();
-    }
-  }, [user]);
+    fetchHealthData();
+  }, [db]);
 
   return (
     <>
       <Navbar />
-      <div className="min-h-screen bg-gray-100 p-8">
-        <div className="max-w-7xl mx-auto">
-          {!user ? (
-            <div className="text-center">
-              <h2 className="text-2xl">Sign in to access your health data</h2>
-              <button
-                className="bg-blue-500 text-white p-4 mt-4 rounded"
-                onClick={signInWithGoogle}
-              >
-                Sign in with Google
-              </button>
+      <div className="health-dashboard">
+        <div className="dashboard-header-container"> {/* Full row container */}
+          <header className="dashboard-header">
+            <h2>Health Dashboard</h2>
+            <div className="date-range">
+              <button>Previous Week</button>
+              <span>2024-09-30</span>
+              <button>Next Week</button>
             </div>
-          ) : (
-            <>
-              <header className="mb-8">
-                <h1 className="text-4xl font-bold text-gray-900">Health Data Overview</h1>
-                <p className="text-xl text-gray-600 mt-2">Your vital health metrics from wearables</p>
-              </header>
+          </header>
+        </div>
 
-              {/* Health Metrics Section */}
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-                {/* Heart Rate Card */}
-                <div className="bg-white p-6 rounded-lg shadow-lg flex items-center">
-                  <div className="text-5xl text-red-500 mr-6">
-                    <FaHeartbeat />
-                  </div>
-                  <div>
-                    <h2 className="text-2xl font-bold mb-2">Heart Rate</h2>
-                    <p className="text-gray-500">Current Heart Rate</p>
-                    <p className="text-4xl font-semibold mt-2">{heartRate ? `${heartRate} BPM` : "Loading..."}</p>
-                  </div>
+        <div className="health-metrics-container"> {/* New container for the box effect */}
+          <div className="health-metrics">
+            {healthMetrics.map((item, index) => (
+              <div key={index} className="health-card">
+                <h3>{item.title}</h3>
+                <div className="value">{item.value}</div>
+                <div className="progress-bar">
+                  <div
+                    className="progress"
+                    style={{ width: item.goal, backgroundColor: item.color }}
+                  ></div>
+                  <span>{item.goal}</span>
                 </div>
 
-                {/* Sleep Data Card */}
-                <div className="bg-white p-6 rounded-lg shadow-lg flex items-center">
-                  <div className="text-5xl text-blue-500 mr-6">
-                    <FaBed />
-                  </div>
-                  <div>
-                    <h2 className="text-2xl font-bold mb-2">Sleep Data</h2>
-                    <p className="text-gray-500">Last Night's Sleep</p>
-                    <p className="text-lg font-semibold mt-2">{sleepHours ? `${sleepHours} hours` : "Loading..."}</p>
-                    <p className="text-lg text-green-500">{sleepQuality}</p>
-                  </div>
-                </div>
+                {/* Render different charts based on the title */}
+                {item.title === 'Steps' || item.title === 'Calories' ? (
+                  <ResponsiveContainer width="100%" height={150}>
+                    <LineChart data={item.chart.map((val, idx) => ({ name: `Day ${idx + 1}`, value: val }))}>
+                      <XAxis dataKey="name" />
+                      <YAxis />
+                      <Tooltip />
+                      <Line type="monotone" dataKey="value" stroke={item.color} />
+                    </LineChart>
+                  </ResponsiveContainer>
+                ) : item.title === 'Stress' ? (
+                  <ResponsiveContainer width="100%" height={150}>
+                    <PieChart>
+                      <Pie
+                        data={[{ name: 'Stress', value: parseFloat(item.value), fill: item.color }, { name: 'Relaxation', value: 100 - parseFloat(item.value), fill: '#ddd' }]}
+                        cx="50%"
+                        cy="50%"
+                        innerRadius={40}
+                        outerRadius={60}
+                        fill={item.color}
+                        paddingAngle={5}
+                        dataKey="value"
+                      />
+                      <Tooltip />
+                    </PieChart>
+                  </ResponsiveContainer>
+                ) : (
+                  <ResponsiveContainer width="100%" height={150}>
+                    <BarChart data={item.chart.map((val, idx) => ({ name: `Day ${idx + 1}`, value: val }))}>
+                      <XAxis dataKey="name" />
+                      <YAxis />
+                      <Tooltip />
+                      <Bar dataKey="value" fill={item.color} />
+                    </BarChart>
+                  </ResponsiveContainer>
+                )}
               </div>
-            </>
-          )}
+            ))}
+          </div>
         </div>
       </div>
     </>

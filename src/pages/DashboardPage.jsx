@@ -8,6 +8,12 @@ const Dashboard = () => {
   const { db } = useFirebase();
   const [healthProgress, setHealthProgress] = useState(100);
   const [upcomingEvents, setUpcomingEvents] = useState([]); // State to hold upcoming events
+  const [healthMetrics, setHealthMetrics] = useState({
+    steps: 0,
+    bloodPressure: '120/80', // example format
+    o2Levels: 98,
+    heartRate: 72,
+  });
 
   const features = [
     { icon: "🔔", title: "Reminders", count: 3, route: "/reminder" },
@@ -15,6 +21,44 @@ const Dashboard = () => {
     { icon: "⚠️", title: "Alerts", count: 0, route: "/alerts" },
     { icon: "❤️", title: "Health", count: 1, route: "/health" },
   ];
+
+  // Function to calculate health progress based on metrics
+  const calculateHealthProgress = () => {
+    const { steps, bloodPressure, o2Levels, heartRate } = healthMetrics;
+
+    // Example weights for each metric
+    const stepsWeight = 0.25;
+    const bloodPressureWeight = 0.25;
+    const o2LevelsWeight = 0.25;
+    const heartRateWeight = 0.25;
+
+    // Normalize metrics for calculation
+    const normalizedSteps = Math.min(steps / 10000, 1); // Example: max steps = 10,000
+    const normalizedBloodPressure = (bloodPressure === '120/80' ? 1 : 0); // Example: normal BP
+    const normalizedO2Levels = Math.min(o2Levels / 100, 1); // Example: max O2 = 100%
+    const normalizedHeartRate = (heartRate >= 60 && heartRate <= 100 ? 1 : 0); // Normal heart rate range
+
+    // Calculate weighted average
+    const overallHealth =
+      (normalizedSteps * stepsWeight) +
+      (normalizedBloodPressure * bloodPressureWeight) +
+      (normalizedO2Levels * o2LevelsWeight) +
+      (normalizedHeartRate * heartRateWeight);
+
+    return Math.round(overallHealth * 100); // Return percentage
+  };
+
+  // Fetch steps from Firestore
+  const fetchSteps = async () => {
+    try {
+      const querySnapshot = await getDocs(collection(db, 'steps'));
+      const stepsData = querySnapshot.docs.map(doc => doc.data().steps); // Assuming each document has a `steps` field
+      const totalSteps = stepsData.reduce((acc, steps) => acc + steps, 0); // Sum all steps
+      setHealthMetrics(prev => ({ ...prev, steps: totalSteps }));
+    } catch (error) {
+      console.error("Error fetching steps: ", error);
+    }
+  };
 
   // Fetch appointments from Firestore
   useEffect(() => {
@@ -32,6 +76,17 @@ const Dashboard = () => {
     };
     fetchAppointments();
   }, [db]);
+
+  // Fetch steps and update health progress
+  useEffect(() => {
+    fetchSteps();
+  }, [db]);
+
+  // Update health progress whenever health metrics change
+  useEffect(() => {
+    const progress = calculateHealthProgress();
+    setHealthProgress(progress);
+  }, [healthMetrics]);
 
   return (
     <>
@@ -72,12 +127,22 @@ const Dashboard = () => {
                   style={{ width: `${healthProgress}%` }}
                 ></div>
               </div>
-              <button
-                onClick={() => setHealthProgress((prev) => Math.min(prev + 5, 100))}
-                className="bg-black text-white px-4 py-2 w-full rounded-lg"
-              >
-                Update Health Data
-              </button>
+
+              {/* New Health Metrics */}
+              <div className="mb-4">
+                <p className="text-lg font-semibold">Steps: {healthMetrics.steps}</p>
+                <p className="text-lg font-semibold">Blood Pressure: {healthMetrics.bloodPressure}</p>
+                <p className="text-lg font-semibold">O2 Levels: {healthMetrics.o2Levels}%</p>
+                <p className="text-lg font-semibold">Heart Rate: {healthMetrics.heartRate} bpm</p>
+              </div>
+
+              <Link to="/health">
+                <button
+                  className="bg-black text-white px-4 py-2 w-full rounded-lg"
+                >
+                  Update Health Data
+                </button>
+              </Link>
             </div>
 
             {/* Upcoming Events Card */}
