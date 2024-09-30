@@ -72,7 +72,7 @@ const Reminders = () => {
 
   return (
     <div style={styles.container}>
-      <h1>Reminders</h1>
+      <h1 style={styles.header}>Reminders</h1>
       <input
         type="text"
         value={reminder}
@@ -80,7 +80,7 @@ const Reminders = () => {
         placeholder="Add a reminder"
         style={styles.input}
       />
-      <button onClick={addReminder} style={styles.button}>
+      <button onClick={addReminder} style={styles.addButton}>
         Add Reminder
       </button>
 
@@ -96,19 +96,21 @@ const Reminders = () => {
                   placeholder="Update reminder"
                   style={styles.input}
                 />
-                <button onClick={() => updateReminder(item.id)} style={styles.button}>
+                <button onClick={() => updateReminder(item.id)} style={styles.saveButton}>
                   Save
                 </button>
               </>
             ) : (
               <>
-                <span>{item.title}</span>
-                <button onClick={() => setEditReminderId(item.id)} style={styles.button}>
-                  Edit
-                </button>
-                <button onClick={() => deleteReminder(item.id)} style={styles.button}>
-                  Delete
-                </button>
+                <span style={styles.reminderText}>{item.title}</span>
+                <div style={styles.buttonGroup}>
+                  <button onClick={() => setEditReminderId(item.id)} style={styles.editButton}>
+                    Edit
+                  </button>
+                  <button onClick={() => deleteReminder(item.id)} style={styles.deleteButton}>
+                    Delete
+                  </button>
+                </div>
               </>
             )}
           </li>
@@ -124,30 +126,87 @@ const styles = {
     padding: "20px",
     maxWidth: "600px",
     margin: "auto",
-    border: "1px solid #ccc",
-    borderRadius: "8px",
+    background: "#f0f4f7",
+    borderRadius: "12px",
+    boxShadow: "0 4px 8px rgba(0, 0, 0, 0.1)",
+    textAlign: "center",
+  },
+  header: {
+    fontSize: "2rem",
+    color: "#333",
+    marginBottom: "20px",
   },
   input: {
-    padding: "10px",
-    border: "1px solid #ccc",
-    borderRadius: "5px",
+    padding: "12px",
+    borderRadius: "8px",
+    border: "2px solid #ccc",
+    width: "70%",
     marginRight: "10px",
+    fontSize: "1rem",
   },
-  button: {
-    padding: "10px",
-    border: "1px solid #ccc",
-    borderRadius: "5px",
+  addButton: {
+    padding: "12px 18px",
+    borderRadius: "8px",
+    border: "none",
+    backgroundColor: "#28a745",
+    color: "#fff",
+    fontSize: "1rem",
     cursor: "pointer",
+    transition: "background-color 0.3s",
+  },
+  addButtonHover: {
+    backgroundColor: "#218838",
   },
   reminderList: {
     listStyleType: "none",
     padding: 0,
+    marginTop: "20px",
   },
   reminderItem: {
     display: "flex",
-    alignItems: "center",
     justifyContent: "space-between",
-    margin: "10px 0",
+    alignItems: "center",
+    padding: "10px 20px",
+    background: "#fff",
+    borderRadius: "8px",
+    boxShadow: "0 2px 4px rgba(0, 0, 0, 0.1)",
+    marginBottom: "10px",
+  },
+  reminderText: {
+    fontSize: "1.2rem",
+    color: "#333",
+    flex: 1,
+  },
+  buttonGroup: {
+    display: "flex",
+    gap: "10px",
+  },
+  editButton: {
+    padding: "8px 14px",
+    borderRadius: "8px",
+    border: "none",
+    backgroundColor: "#007bff",
+    color: "#fff",
+    cursor: "pointer",
+    fontSize: "0.9rem",
+  },
+  deleteButton: {
+    padding: "8px 14px",
+    borderRadius: "8px",
+    border: "none",
+    backgroundColor: "#dc3545",
+    color: "#fff",
+    cursor: "pointer",
+    fontSize: "0.9rem",
+  },
+  saveButton: {
+    padding: "8px 14px",
+    borderRadius: "8px",
+    border: "none",
+    backgroundColor: "#28a745",
+    color: "#fff",
+    cursor: "pointer",
+    fontSize: "0.9rem",
   },
 };
 
