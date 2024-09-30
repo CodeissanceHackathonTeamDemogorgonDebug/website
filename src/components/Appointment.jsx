@@ -1,7 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useFirebase } from '../context/Firebase';
-import { collection, getDocs, updateDoc, doc, deleteDoc, addDoc, getDoc } from 'firebase/firestore';
-import { ZegoUIKitPrebuilt } from '@zegocloud/zego-uikit-prebuilt';
+import { collection, getDocs, doc, deleteDoc, addDoc, getDoc } from 'firebase/firestore';
 import './Appointment.css';
 
 const Appointments = () => {
@@ -11,7 +10,6 @@ const Appointments = () => {
   const [loading, setLoading] = useState(true);
   const [selectedTimes, setSelectedTimes] = useState({});
   const [statusUpdates, setStatusUpdates] = useState({});
-  const [videoCallUrls, setVideoCallUrls] = useState({});
 
   // Fetch appointment requests and accepted appointments from Firestore
   useEffect(() => {
@@ -49,23 +47,7 @@ const Appointments = () => {
     fetchAppointments();
   }, [db]);
 
-  // Function to generate a ZEGOCLOUD video call URL
-  const generateVideoCallUrl = async (appointmentId) => {
-    const appID = '1764494396'; // Replace with your ZEGOCLOUD App ID
-    const serverSecret = '035b33ebeb11f47504c0d059444bc233'; // Replace with your ZEGOCLOUD Server Secret
-    const userID = `user_${appointmentId}`;
-    const roomID = `room_${appointmentId}`;
-    
-    const kitToken = ZegoUIKitPrebuilt.generateKitTokenForTest(appID, serverSecret, roomID, userID, userID);
-    
-    console.log('Generated Kit Token:', kitToken); // Debugging line
-
-    const zegoCall = ZegoUIKitPrebuilt.create(kitToken);
-    
-    return zegoCall;
-  };
-
-  // Handle appointment acceptance with selected time and video call
+  // Handle appointment acceptance with selected time
   const acceptAppointment = async (id, appointment) => {
     try {
       const selectedTime = selectedTimes[id];
@@ -84,12 +66,6 @@ const Appointments = () => {
       const appointmentCollection = collection(db, 'Appointment');
       await addDoc(appointmentCollection, newAppointment);
       await deleteDoc(appointmentRef);
-
-      const zegoCall = await generateVideoCallUrl(id);
-      setVideoCallUrls((prevUrls) => ({
-        ...prevUrls,
-        [id]: zegoCall,
-      }));
 
       setStatusUpdates({
         ...statusUpdates,
@@ -205,13 +181,11 @@ const Appointments = () => {
                 <p><strong>Doctor UID:</strong> {doctoruid}</p>
                 <p><strong>Appointment Type:</strong> {appointmentType}</p>
                 <p><strong>Time:</strong> {formattedTime}</p>
-                {videoCallUrls[id] && (
-                  <div className="video-call-section">
-                    <a href={videoCallUrls[id]} target="_blank" rel="noopener noreferrer" className="video-call-button">
-                      Start Video Call
-                    </a>
-                  </div>
-                )}
+                <div className="video-call-section">
+                  <button className="video-call-button">
+                    Start Video Call
+                  </button>
+                </div>
               </div>
             );
           })
