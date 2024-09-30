@@ -1,33 +1,28 @@
-const functions = require("firebase-functions");
-const admin = require("firebase-admin");
-const nodemailer = require("nodemailer");
+// index.js
+const emailjs = require('emailjs-com');
 
-admin.initializeApp();
+// Initialize EmailJS
+const userID = 'om-mhaske7'; // Replace with your EmailJS user ID
+const serviceID = 'service_y5utfmj'; // Replace with your EmailJS service ID
+const templateID = 'template_pfoklbr'; // Replace with your EmailJS template ID
 
-// Configure Nodemailer
-const transporter = nodemailer.createTransport({
-    service: 'gmail', // Use any email service provider
-    auth: {
-        user: 'omvm2005@gmail.com', // Your email address
-        pass: '8M7A8H78AQ7LGR61XJF2FY4D', // Your email password (or app password if 2FA is enabled)
-    },
-});
+const sendEmail = async (alertMessage, emergencyContact) => {
+    const templateParams = {
+        message: alertMessage,
+        to_email: emergencyContact,
+    };
 
-exports.sendEmergencyEmail = functions.firestore
-    .document('emergencyAlerts/{alertId}')
-    .onCreate(async (snapshot, context) => {
-        const data = snapshot.data();
-        const mailOptions = {
-            from: 'your-email@gmail.com', // Sender address
-            to: data.contactEmail, // Recipient address
-            subject: 'Emergency Alert Received',
-            text: `You have received an emergency alert from ${data.contactName}:\n\n${data.emergencyMessage}`,
-        };
+    try {
+        // Send email using EmailJS
+        const response = await emailjs.send(serviceID, templateID, templateParams, userID);
+        console.log('Email sent successfully!', response);
+    } catch (error) {
+        console.error('Failed to send email. Error:', error);
+    }
+};
 
-        try {
-            await transporter.sendMail(mailOptions);
-            console.log('Email sent successfully');
-        } catch (error) {
-            console.error('Error sending email:', error);
-        }
-    });
+// Example usage
+const alertMessage = "This is a test emergency alert!";
+const emergencyContact = "recipient@example.com"; // Replace with the recipient's email
+
+sendEmail(alertMessage, emergencyContact);
