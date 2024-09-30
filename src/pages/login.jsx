@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from "react";
 import { setDoc, doc, collection, query, where, getDocs } from "firebase/firestore";
 import { useFirebase } from "../context/Firebase"; // Use context to access Firebase
@@ -20,21 +19,19 @@ const LoginPage = () => {
     availability: '',
     hourlyRate: '',
     languages: '',
+    certificationLink: '',
   });
   const [formSubmitted, setFormSubmitted] = useState(false);
 
-  // Fetch user data only after role selection and user login
   useEffect(() => {
     if (user && role) {
-      fetchUserData(); // Fetch user data based on the selected role
+      fetchUserData();
     }
   }, [user, role]);
 
-  // Fetch user data from Firestore based on selected role
   const fetchUserData = async () => {
-    if (!role || !user) return; // Ensure both role and user are available
+    if (!role || !user) return;
     
-    // Determine the collection based on the selected role
     const collectionName = role === "Caretaker" 
       ? "Caretakers" 
       : role === "Patient" 
@@ -46,8 +43,7 @@ const LoginPage = () => {
   
     if (!querySnapshot.empty) {
       const userData = querySnapshot.docs[0].data();
-
-      // Only fetch data relevant to the selected role
+      
       if (role === "Caretaker") {
         setFormData({
           ...formData,
@@ -63,28 +59,24 @@ const LoginPage = () => {
           availability: userData.availability || '',
           hourlyRate: userData.hourlyRate || '',
           languages: userData.languages?.join(', ') || '',
+          certificationLink: userData.certificationLink || '',
         });
       }
-      // Handle other roles similarly if needed
     }
   };
 
-  // Handle role selection
   const handleRoleSelect = (selectedRole) => {
     setRole(selectedRole);
   };
 
-  // Handle input changes for form
   const handleInputChange = (e) => {
     const { name, value } = e.target;
     setFormData((prevData) => ({ ...prevData, [name]: value }));
   };
 
-  // Submit user form and save data to Firestore
   const handleFormSubmit = async () => {
     try {
       if (user) {
-        // Determine the correct collection based on the selected role
         const collectionName = role === "Caretaker" 
           ? "Caretakers" 
           : role === "Patient" 
@@ -93,21 +85,13 @@ const LoginPage = () => {
         
         const userRef = doc(db, collectionName, user.uid);
         await setDoc(userRef, {
+          ...formData,
           uid: user.uid,
-          name: formData.name,
           role: role,
-          phoneNumber: formData.phoneNumber,
-          age: formData.age,
-          gender: formData.gender || '',
-          profilePic: formData.profilePic || '',
-          email: formData.email || '',
-          address: formData.address || '',
-          experienceYears: formData.experienceYears || '',
-          specialties: formData.specialties.split(',').map(s => s.trim()), // Convert string back to list
-          availability: formData.availability || '',
+          specialties: formData.specialties.split(',').map(s => s.trim()),
+          languages: formData.languages.split(',').map(l => l.trim()),
           hourlyRate: parseFloat(formData.hourlyRate) || 0,
-          languages: formData.languages.split(',').map(l => l.trim()), // Convert string back to list
-        }, { merge: true }); // Use merge to avoid overwriting existing fields
+        }, { merge: true });
         
         setFormSubmitted(true);
       }
@@ -116,7 +100,6 @@ const LoginPage = () => {
     }
   };
 
-  // Handle Google sign-in
   const handleLogin = async () => {
     try {
       await signInWithGoogle();
@@ -125,12 +108,11 @@ const LoginPage = () => {
     }
   };
 
-  // Handle logout
   const handleLogout = async () => {
     try {
       await logout();
-      setRole(''); // Reset role on logout
-      setFormSubmitted(false); // Reset form state
+      setRole('');
+      setFormSubmitted(false);
     } catch (error) {
       console.error('Error logging out:', error);
     }
@@ -143,13 +125,15 @@ const LoginPage = () => {
         <div style={styles.card}>
           {user ? (
             <>
-              <div style={styles.welcomeMessage}>Welcome back, {user.displayName}!</div>
+              <div style={styles.welcomeMessage}>Welcome, {user.displayName}!</div>
               {!role ? (
                 <>
                   <h2>Select Your Role</h2>
-                  <button onClick={() => handleRoleSelect('Caretaker')} style={styles.button}>Caretaker</button>
-                  <button onClick={() => handleRoleSelect('Patient')} style={styles.button}>Patient</button>
-                  <button onClick={() => handleRoleSelect('Family Member')} style={styles.button}>Family Member</button>
+                  <div style={styles.roleContainer}>
+                    <button onClick={() => handleRoleSelect('Caretaker')} style={styles.roleButton}>Caretaker</button>
+                    <button onClick={() => handleRoleSelect('Patient')} style={styles.roleButton}>Patient</button>
+                    <button onClick={() => handleRoleSelect('Family Member')} style={styles.roleButton}>Family Member</button>
+                  </div>
                 </>
               ) : !formSubmitted ? (
                 <>
@@ -252,6 +236,14 @@ const LoginPage = () => {
                         placeholder="Languages Spoken (comma separated)"
                         style={styles.input}
                       />
+                      <input
+                        type="text"
+                        name="certificationLink"
+                        value={formData.certificationLink}
+                        onChange={handleInputChange}
+                        placeholder="Certification & Resume Drive Link"
+                        style={styles.input}
+                      />
                     </>
                   )}
                   <button onClick={handleFormSubmit} style={styles.button}>Submit Form</button>
@@ -284,7 +276,7 @@ const styles = {
     padding: 0,
     fontFamily: 'Arial, sans-serif',
     background: '#f7f7f7',
-    height: '100vh',
+    minHeight: '100vh',
     display: 'flex',
     justifyContent: 'center',
     alignItems: 'center',
@@ -295,8 +287,8 @@ const styles = {
     boxShadow: '0 6px 20px rgba(0, 0, 0, 0.1)',
     padding: '40px 50px',
     textAlign: 'center',
-    width: '100%',
-    maxWidth: '450px',
+    width: '90%',
+    maxWidth: '500px',
   },
   input: {
     width: '100%',
@@ -314,16 +306,40 @@ const styles = {
     cursor: 'pointer',
     fontSize: '16px',
     marginTop: '20px',
-    transition: 'background-color 0.3s',
+    transition: 'background-color 0.3s ease',
   },
   buttonLogout: {
-    backgroundColor: '#ff4d4d',
+    backgroundColor: '#f44336',
+    color: 'white',
+    border: 'none',
+    borderRadius: '8px',
+    padding: '12px 25px',
+    cursor: 'pointer',
+    fontSize: '16px',
     marginTop: '20px',
+    transition: 'background-color 0.3s ease',
+  },
+  roleContainer: {
+    display: 'flex',
+    justifyContent: 'center',
+    gap: '10px',
+    marginBottom: '20px',
+  },
+  roleButton: {
+    backgroundColor: '#f1f1f1',
+    padding: '10px 15px',
+    borderRadius: '8px',
+    cursor: 'pointer',
+    fontSize: '16px',
+    border: '1px solid #ccc',
+    transition: 'background-color 0.3s ease',
+    marginTop:'35px',
+    backgroundColor:'green',
+    color:'white'
   },
   welcomeMessage: {
     fontSize: '20px',
-    fontWeight: 'bold',
-    marginBottom: '15px',
+    marginBottom: '20px',
   },
 };
 
