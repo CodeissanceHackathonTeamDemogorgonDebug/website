@@ -15,6 +15,7 @@ const Navbar = () => {
         <Link to="/health" className="navLink">Health Data</Link>
         <Link to="/calls" className="navLink">Appointment</Link>
         <Link to="/dashboard" className="navLink">Dashboard</Link>
+        <Link to="/faqs" className="navLink">FAQS</Link>
       </div>
       <div className="userIcon">
         <Link to="/login" className="userLink">
