@@ -7,7 +7,7 @@ const Dashboard = () => {
 
   const features = [
     { icon: "🔔", title: "Reminders", count: 3, route: "/reminder" },
-    { icon: "📞", title: "Calls", count: 2, route: "/calls" },
+    { icon: "📞", title: "Appointment", count: 2, route: "/calls" },
     { icon: "⚠️", title: "Alerts", count: 0, route: "/alerts" },
     { icon: "❤️", title: "Health", count: 1, route: "/health" },
   ];

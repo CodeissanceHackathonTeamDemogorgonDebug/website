@@ -7,6 +7,7 @@ import Marketplace from './pages/Marketplace';
 import LoginPage from './pages/login';
 import { FirebaseProvider } from './context/Firebase';
 import Reminders from './components/Reminders';
+import Appointments from './components/Appointment';
 // import { FirebaseProvider } from './context/Firebase';
 
 function App() {
@@ -20,7 +21,7 @@ function App() {
           <Route path="/marketplace" element={<Marketplace/>} />
           <Route path="/login" element={<LoginPage/>} />
           <Route path="/reminder" element={<Reminders/>} />
-          <Route path="/calls" element={<Home />} />
+          <Route path="/calls" element={<Appointments />} />
           <Route path="/alerts" element={<Home />} />
           <Route path="/health" element={<Home />} />
           
