@@ -140,7 +140,7 @@ const Dashboard = () => {
                 <button
                   className="bg-black text-white px-4 py-2 w-full rounded-lg"
                 >
-                  Update Health Data
+                  Health Data Analysis
                 </button>
               </Link>
             </div>
