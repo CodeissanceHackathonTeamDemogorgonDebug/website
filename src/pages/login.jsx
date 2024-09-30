@@ -1,203 +1,330 @@
-import React, { useState, useEffect } from 'react';
-import { useFirebase } from '../context/Firebase';
+
+import React, { useState, useEffect } from "react";
+import { setDoc, doc, collection, query, where, getDocs } from "firebase/firestore";
+import { useFirebase } from "../context/Firebase"; // Use context to access Firebase
 import Navbar from '../components/Navbar';
 
 const LoginPage = () => {
-  const { signInWithGoogle, user, logout, db } = useFirebase();
+  const { signInWithGoogle, user, db, logout } = useFirebase(); // Access Firebase services
   const [role, setRole] = useState('');
-  const [isRoleSelected, setIsRoleSelected] = useState(false);
+  const [formData, setFormData] = useState({
+    name: '',
+    age: '',
+    phoneNumber: '',
+    gender: '',
+    profilePic: '',
+    email: '',
+    address: '',
+    experienceYears: '',
+    specialties: '',
+    availability: '',
+    hourlyRate: '',
+    languages: '',
+  });
+  const [formSubmitted, setFormSubmitted] = useState(false);
 
+  // Fetch user data only after role selection and user login
   useEffect(() => {
-    // Fetch the role from Firestore after login
-    if (user) {
-      const fetchRole = async () => {
-        const docRef = db.collection('users').doc(user.uid);
-        const docSnap = await docRef.get();
-
-        if (docSnap.exists) {
-          const userData = docSnap.data();
-          setRole(userData.role);
-          setIsRoleSelected(true);
-        }
-      };
-
-      fetchRole();
+    if (user && role) {
+      fetchUserData(); // Fetch user data based on the selected role
     }
-  }, [user, db]);
+  }, [user, role]);
 
-  const handleLogin = () => {
-    signInWithGoogle();
-  };
+  // Fetch user data from Firestore based on selected role
+  const fetchUserData = async () => {
+    if (!role || !user) return; // Ensure both role and user are available
+    
+    // Determine the collection based on the selected role
+    const collectionName = role === "Caretaker" 
+      ? "Caretakers" 
+      : role === "Patient" 
+      ? "Patients" 
+      : "FamilyMembers";
+  
+    const q = query(collection(db, collectionName), where("uid", "==", user.uid));
+    const querySnapshot = await getDocs(q);
+  
+    if (!querySnapshot.empty) {
+      const userData = querySnapshot.docs[0].data();
 
-  const handleRoleSelect = async (selectedRole) => {
-    if (user) {
-      setRole(selectedRole);
-      setIsRoleSelected(true);
-
-      // Save the selected role to Firestore
-      const userRef = db.collection('users').doc(user.uid);
-      await userRef.set({ role: selectedRole }, { merge: true });
+      // Only fetch data relevant to the selected role
+      if (role === "Caretaker") {
+        setFormData({
+          ...formData,
+          name: userData.name || '',
+          age: userData.age || '',
+          phoneNumber: userData.phoneNumber || '',
+          gender: userData.gender || '',
+          profilePic: userData.profilePic || '',
+          email: userData.email || '',
+          address: userData.address || '',
+          experienceYears: userData.experienceYears || '',
+          specialties: userData.specialties?.join(', ') || '',
+          availability: userData.availability || '',
+          hourlyRate: userData.hourlyRate || '',
+          languages: userData.languages?.join(', ') || '',
+        });
+      }
+      // Handle other roles similarly if needed
     }
   };
 
-  const handleRoleChange = () => {
-    setIsRoleSelected(false);
+  // Handle role selection
+  const handleRoleSelect = (selectedRole) => {
+    setRole(selectedRole);
   };
 
-  // Inline styles for improved UI
-  const styles = {
-    body: {
-      margin: 0,
-      padding: 0,
-      fontFamily: 'Arial, sans-serif',
-      background: 'linear-gradient(to right, #ff7e5f, #feb47b)',
-      height: '100vh',
-      display: 'flex',
-      justifyContent: 'center',
-      alignItems: 'center',
-    },
-    loginContainer: {
-      display: 'flex',
-      justifyContent: 'center',
-      alignItems: 'center',
-      height: '100%',
-      width: '100%',
-    },
-    loginCard: {
-      backgroundColor: 'white',
-      borderRadius: '12px',
-      boxShadow: '0 8px 40px rgba(0, 0, 0, 0.15)',
-      padding: '30px 40px',
-      textAlign: 'center',
-      width: '90%',
-      maxWidth: '350px',
-    },
-    heading: {
-      marginBottom: '20px',
-      fontSize: '26px',
-      color: '#333',
-    },
-    subheading: {
-      margin: '10px 0',
-      fontSize: '20px',
-      color: '#666',
-    },
-    button: {
-      backgroundColor: '#4285f4',
-      color: 'white',
-      border: 'none',
-      borderRadius: '5px',
-      padding: '12px 25px',
-      cursor: 'pointer',
-      fontSize: '16px',
-      marginBottom: '15px',
-      transition: 'background-color 0.3s',
-    },
-    buttonLogout: {
-      backgroundColor: '#ff4d4d',
-    },
-    buttonHover: {
-      backgroundColor: '#357ae8',
-    },
-    buttonLogoutHover: {
-      backgroundColor: '#e63939',
-    },
-    roleButton: {
-      backgroundColor: '#4caf50',
-      color: 'white',
-      border: 'none',
-      borderRadius: '5px',
-      padding: '10px 20px',
-      margin: '10px',
-      cursor: 'pointer',
-      fontSize: '16px',
-    },
-    changeRoleButton: {
-      marginTop: '20px',
-      padding: '8px 16px',
-      fontSize: '14px',
-      color: '#4caf50',
-      backgroundColor: 'transparent',
-      border: '1px solid #4caf50',
-      borderRadius: '5px',
-      cursor: 'pointer',
-    },
+  // Handle input changes for form
+  const handleInputChange = (e) => {
+    const { name, value } = e.target;
+    setFormData((prevData) => ({ ...prevData, [name]: value }));
+  };
+
+  // Submit user form and save data to Firestore
+  const handleFormSubmit = async () => {
+    try {
+      if (user) {
+        // Determine the correct collection based on the selected role
+        const collectionName = role === "Caretaker" 
+          ? "Caretakers" 
+          : role === "Patient" 
+          ? "Patients" 
+          : "FamilyMembers";
+        
+        const userRef = doc(db, collectionName, user.uid);
+        await setDoc(userRef, {
+          uid: user.uid,
+          name: formData.name,
+          role: role,
+          phoneNumber: formData.phoneNumber,
+          age: formData.age,
+          gender: formData.gender || '',
+          profilePic: formData.profilePic || '',
+          email: formData.email || '',
+          address: formData.address || '',
+          experienceYears: formData.experienceYears || '',
+          specialties: formData.specialties.split(',').map(s => s.trim()), // Convert string back to list
+          availability: formData.availability || '',
+          hourlyRate: parseFloat(formData.hourlyRate) || 0,
+          languages: formData.languages.split(',').map(l => l.trim()), // Convert string back to list
+        }, { merge: true }); // Use merge to avoid overwriting existing fields
+        
+        setFormSubmitted(true);
+      }
+    } catch (error) {
+      console.error("Error saving user data:", error);
+    }
+  };
+
+  // Handle Google sign-in
+  const handleLogin = async () => {
+    try {
+      await signInWithGoogle();
+    } catch (error) {
+      console.error("Error logging in:", error);
+    }
+  };
+
+  // Handle logout
+  const handleLogout = async () => {
+    try {
+      await logout();
+      setRole(''); // Reset role on logout
+      setFormSubmitted(false); // Reset form state
+    } catch (error) {
+      console.error('Error logging out:', error);
+    }
   };
 
   return (
     <>
       <Navbar />
       <div style={styles.body}>
-        <div style={styles.loginContainer}>
-          <div style={styles.loginCard}>
-            <h1 style={styles.heading}>Welcome</h1>
-            {user ? (
-              <>
-                {!isRoleSelected ? (
-                  <div>
-                    <h2 style={styles.subheading}>Select your role</h2>
-                    <button
-                      style={styles.roleButton}
-                      onClick={() => handleRoleSelect('Patient')}
-                    >
-                      I am a Patient
-                    </button>
-                    <button
-                      style={styles.roleButton}
-                      onClick={() => handleRoleSelect('Caretaker')}
-                    >
-                      I am a Caretaker
-                    </button>
-                    <button
-                      style={styles.roleButton}
-                      onClick={() => handleRoleSelect('Family Member')}
-                    >
-                      I am a Family Member
-                    </button>
-                  </div>
-                ) : (
-                  <div>
-                    <h2 style={styles.subheading}>Hello, {user.displayName}</h2>
-                    <h3 style={styles.subheading}>Role: {role}</h3>
-                    <button
-                      style={{ ...styles.button, ...styles.buttonLogout }}
-                      onClick={logout}
-                    >
-                      Logout
-                    </button>
-                    <button
-                      style={styles.changeRoleButton}
-                      onClick={handleRoleChange}
-                    >
-                      Change Role
-                    </button>
-                  </div>
-                )}
-              </>
-            ) : (
-              <>
-                <h2 style={styles.subheading}>Please log in</h2>
-                <button
-                  style={styles.button}
-                  onClick={handleLogin}
-                  onMouseEnter={(e) =>
-                    (e.currentTarget.style.backgroundColor =
-                      styles.buttonHover.backgroundColor)
-                  }
-                  onMouseLeave={(e) =>
-                    (e.currentTarget.style.backgroundColor =
-                      styles.button.backgroundColor)
-                  }
-                >
-                  Sign in with Google
-                </button>
-              </>
-            )}
-          </div>
+        <div style={styles.card}>
+          {user ? (
+            <>
+              <div style={styles.welcomeMessage}>Welcome back, {user.displayName}!</div>
+              {!role ? (
+                <>
+                  <h2>Select Your Role</h2>
+                  <button onClick={() => handleRoleSelect('Caretaker')} style={styles.button}>Caretaker</button>
+                  <button onClick={() => handleRoleSelect('Patient')} style={styles.button}>Patient</button>
+                  <button onClick={() => handleRoleSelect('Family Member')} style={styles.button}>Family Member</button>
+                </>
+              ) : !formSubmitted ? (
+                <>
+                  <h2>Fill in Your Details ({role})</h2>
+                  <input
+                    type="text"
+                    name="name"
+                    value={formData.name}
+                    onChange={handleInputChange}
+                    placeholder="Name"
+                    style={styles.input}
+                  />
+                  <input
+                    type="number"
+                    name="age"
+                    value={formData.age}
+                    onChange={handleInputChange}
+                    placeholder="Age"
+                    style={styles.input}
+                  />
+                  <input
+                    type="text"
+                    name="phoneNumber"
+                    value={formData.phoneNumber}
+                    onChange={handleInputChange}
+                    placeholder="Phone Number"
+                    style={styles.input}
+                  />
+                  {role === 'Caretaker' && (
+                    <>
+                      <input
+                        type="text"
+                        name="gender"
+                        value={formData.gender}
+                        onChange={handleInputChange}
+                        placeholder="Gender"
+                        style={styles.input}
+                      />
+                      <input
+                        type="text"
+                        name="profilePic"
+                        value={formData.profilePic}
+                        onChange={handleInputChange}
+                        placeholder="Profile Picture URL"
+                        style={styles.input}
+                      />
+                      <input
+                        type="text"
+                        name="email"
+                        value={formData.email}
+                        onChange={handleInputChange}
+                        placeholder="Email"
+                        style={styles.input}
+                      />
+                      <input
+                        type="text"
+                        name="address"
+                        value={formData.address}
+                        onChange={handleInputChange}
+                        placeholder="Address"
+                        style={styles.input}
+                      />
+                      <input
+                        type="number"
+                        name="experienceYears"
+                        value={formData.experienceYears}
+                        onChange={handleInputChange}
+                        placeholder="Years of Experience"
+                        style={styles.input}
+                      />
+                      <input
+                        type="text"
+                        name="specialties"
+                        value={formData.specialties}
+                        onChange={handleInputChange}
+                        placeholder="Specialties (comma separated)"
+                        style={styles.input}
+                      />
+                      <input
+                        type="text"
+                        name="availability"
+                        value={formData.availability}
+                        onChange={handleInputChange}
+                        placeholder="Availability"
+                        style={styles.input}
+                      />
+                      <input
+                        type="number"
+                        name="hourlyRate"
+                        value={formData.hourlyRate}
+                        onChange={handleInputChange}
+                        placeholder="Hourly Rate"
+                        style={styles.input}
+                      />
+                      <input
+                        type="text"
+                        name="languages"
+                        value={formData.languages}
+                        onChange={handleInputChange}
+                        placeholder="Languages Spoken (comma separated)"
+                        style={styles.input}
+                      />
+                    </>
+                  )}
+                  <button onClick={handleFormSubmit} style={styles.button}>Submit Form</button>
+                </>
+              ) : (
+                <>
+                  <h2>Thank you for submitting the form!</h2>
+                  <button onClick={handleLogout} style={styles.buttonLogout}>Logout</button>
+                </>
+              )}
+            </>
+          ) : (
+            <>
+              <h2>Please Sign In with Google</h2>
+              <button onClick={handleLogin} style={styles.button}>
+                Sign in with Google
+              </button>
+            </>
+          )}
         </div>
       </div>
     </>
   );
+};
+
+// Styles
+const styles = {
+  body: {
+    margin: 0,
+    padding: 0,
+    fontFamily: 'Arial, sans-serif',
+    background: '#f7f7f7',
+    height: '100vh',
+    display: 'flex',
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  card: {
+    backgroundColor: 'white',
+    borderRadius: '12px',
+    boxShadow: '0 6px 20px rgba(0, 0, 0, 0.1)',
+    padding: '40px 50px',
+    textAlign: 'center',
+    width: '100%',
+    maxWidth: '450px',
+  },
+  input: {
+    width: '100%',
+    padding: '10px',
+    margin: '10px 0',
+    borderRadius: '8px',
+    border: '1px solid #ccc',
+  },
+  button: {
+    backgroundColor: '#4285f4',
+    color: 'white',
+    border: 'none',
+    borderRadius: '8px',
+    padding: '12px 25px',
+    cursor: 'pointer',
+    fontSize: '16px',
+    marginTop: '20px',
+    transition: 'background-color 0.3s',
+  },
+  buttonLogout: {
+    backgroundColor: '#ff4d4d',
+    marginTop: '20px',
+  },
+  welcomeMessage: {
+    fontSize: '20px',
+    fontWeight: 'bold',
+    marginBottom: '15px',
+  },
 };
 
 export default LoginPage;

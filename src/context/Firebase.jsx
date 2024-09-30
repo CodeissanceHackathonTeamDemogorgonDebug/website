@@ -1,8 +1,7 @@
-// src/context/Firebase.jsx
 import React, { createContext, useContext, useEffect, useState } from 'react';
 import { initializeApp } from 'firebase/app';
 import { getAuth, GoogleAuthProvider, signInWithPopup, signOut } from 'firebase/auth';
-import { getFirestore, collection, addDoc } from 'firebase/firestore'; 
+import { getFirestore, collection, addDoc } from 'firebase/firestore';
 
 // Your Firebase configuration
 const firebaseConfig = {
@@ -26,32 +25,51 @@ export const useFirebase = () => useContext(FirebaseContext);
 
 export const FirebaseProvider = ({ children }) => {
   const [user, setUser] = useState(null);
+  const [loading, setLoading] = useState(false); // Loading state
 
   // Function to sign in with Google
   const signInWithGoogle = async () => {
+    setLoading(true); // Set loading to true
     try {
       const result = await signInWithPopup(auth, provider);
       setUser(result.user);
+      // Optional: Store user info in Firestore here
     } catch (error) {
       console.error("Error during Google Sign In: ", error);
+      // Show error message to user
+    } finally {
+      setLoading(false); // Set loading to false after operation
     }
   };
 
   // Function to log out the user
   const logout = async () => {
-    await signOut(auth);
-    setUser(null);
+    setLoading(true); // Set loading to true
+    try {
+      await signOut(auth);
+      setUser(null);
+    } catch (error) {
+      console.error("Error during logout: ", error);
+      // Show error message to user
+    } finally {
+      setLoading(false); // Set loading to false after operation
+    }
   };
 
   // Function to add a review for a caregiver
   const addReview = async (caregiverId, reviewText, rating) => {
-    const reviewsCollection = collection(db, 'reviews');
-    await addDoc(reviewsCollection, {
-      caregiverId,
-      reviewText,
-      rating,
-      createdAt: new Date(),
-    });
+    try {
+      const reviewsCollection = collection(db, 'reviews');
+      await addDoc(reviewsCollection, {
+        caregiverId,
+        reviewText,
+        rating,
+        createdAt: new Date(),
+      });
+    } catch (error) {
+      console.error("Error adding review: ", error);
+      // Show error message to user
+    }
   };
 
   // Set up an effect to manage user state
@@ -62,7 +80,7 @@ export const FirebaseProvider = ({ children }) => {
 
   // Provide user and authentication functions to the context
   return (
-    <FirebaseContext.Provider value={{ user, signInWithGoogle, logout, db, addReview }}>
+    <FirebaseContext.Provider value={{ user, loading, signInWithGoogle, logout, db, addReview }}>
       {children}
     </FirebaseContext.Provider>
   );
