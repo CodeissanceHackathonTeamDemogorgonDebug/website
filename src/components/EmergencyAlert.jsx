@@ -2,12 +2,13 @@
 import React, { useState } from "react";
 import { addDoc, collection } from "firebase/firestore";
 import { db } from "./firebaseConfig"; // Make sure to import your Firebase configuration
+import emailjs from 'emailjs-com';
 
 const EmergencyAlert = () => {
   const [alertMessage, setAlertMessage] = useState("");
   const [emergencyContact, setEmergencyContact] = useState("");
 
-  // Send emergency alert to Firestore and SMS
+  // Send emergency alert to Firestore and email
   const sendEmergencyAlert = async () => {
     if (!alertMessage || !emergencyContact) {
       alert("Please enter an alert message and emergency contact.");
@@ -20,23 +21,21 @@ const EmergencyAlert = () => {
       timestamp: new Date(),
     });
 
-    // Step 2: Send SMS to emergency contact via Cloud Function
-    const response = await fetch('YOUR_CLOUD_FUNCTION_URL/sendSMS', { // Replace with your Cloud Function URL
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify({
-        message: alertMessage,
-        to: emergencyContact,
-      }),
-    });
+    // Step 2: Send email using EmailJS
+    const templateParams = {
+      message: alertMessage,
+      to_email: emergencyContact,
+    };
 
-    if (response.ok) {
-      alert("Emergency alert sent!");
-    } else {
-      alert("Failed to send alert. Please try again.");
-    }
+    emailjs.send('YOUR_SERVICE_ID', 'YOUR_TEMPLATE_ID', templateParams, 'YOUR_USER_ID') // Replace with your EmailJS service ID, template ID, and user ID
+      .then((response) => {
+        console.log('Email sent successfully!', response.status, response.text);
+        alert("Emergency alert sent via email!");
+      })
+      .catch((error) => {
+        console.error('Failed to send email. Error:', error);
+        alert("Failed to send alert via email. Please try again.");
+      });
 
     // Clear input fields
     setAlertMessage("");
@@ -57,7 +56,7 @@ const EmergencyAlert = () => {
         type="text"
         value={emergencyContact}
         onChange={(e) => setEmergencyContact(e.target.value)}
-        placeholder="Emergency Contact Number"
+        placeholder="Emergency Contact Email"
         style={styles.input}
       />
       <button onClick={sendEmergencyAlert} style={styles.button}>
