@@ -49,8 +49,12 @@ const Marketplace = () => {
           <button style={styles.button}>Filters</button>
         </div>
         <div style={styles.sliderContainer}>
-          <label>Max Distance: <input type="range" min="0" max="50" /> 10 miles</label>
-          <label>Max Hourly Rate: <input type="range" min="0" max="100" /> $30</label>
+          <label>
+            Max Distance: <input type="range" min="0" max="50" /> 10 miles
+          </label>
+          <label>
+            Max Hourly Rate: <input type="range" min="0" max="100" /> $30
+          </label>
         </div>
         <div style={styles.caregiverGrid}>
           {caregivers.map(caregiver => {

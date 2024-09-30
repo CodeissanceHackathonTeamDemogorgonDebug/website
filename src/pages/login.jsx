@@ -1,28 +1,56 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useFirebase } from '../context/Firebase';
 import Navbar from '../components/Navbar';
 
 const LoginPage = () => {
-  const { signInWithGoogle, user, logout } = useFirebase();
-  const [role, setRole] = useState(''); // To store the selected role
-  const [isRoleSelected, setIsRoleSelected] = useState(false); // To check if the role has been selected
+  const { signInWithGoogle, user, logout, db } = useFirebase();
+  const [role, setRole] = useState('');
+  const [isRoleSelected, setIsRoleSelected] = useState(false);
+
+  useEffect(() => {
+    // Fetch the role from Firestore after login
+    if (user) {
+      const fetchRole = async () => {
+        const docRef = db.collection('users').doc(user.uid);
+        const docSnap = await docRef.get();
+
+        if (docSnap.exists) {
+          const userData = docSnap.data();
+          setRole(userData.role);
+          setIsRoleSelected(true);
+        }
+      };
+
+      fetchRole();
+    }
+  }, [user, db]);
 
   const handleLogin = () => {
     signInWithGoogle();
   };
 
-  const handleRoleSelect = (selectedRole) => {
-    setRole(selectedRole);
-    setIsRoleSelected(true);
+  const handleRoleSelect = async (selectedRole) => {
+    if (user) {
+      setRole(selectedRole);
+      setIsRoleSelected(true);
+
+      // Save the selected role to Firestore
+      const userRef = db.collection('users').doc(user.uid);
+      await userRef.set({ role: selectedRole }, { merge: true });
+    }
   };
 
-  // Inline styles
+  const handleRoleChange = () => {
+    setIsRoleSelected(false);
+  };
+
+  // Inline styles for improved UI
   const styles = {
     body: {
       margin: 0,
       padding: 0,
       fontFamily: 'Arial, sans-serif',
-      background: 'linear-gradient(to right, #4facfe, #00f2fe)',
+      background: 'linear-gradient(to right, #ff7e5f, #feb47b)',
       height: '100vh',
       display: 'flex',
       justifyContent: 'center',
@@ -37,29 +65,32 @@ const LoginPage = () => {
     },
     loginCard: {
       backgroundColor: 'white',
-      borderRadius: '8px',
-      boxShadow: '0 4px 30px rgba(0, 0, 0, 0.1)',
-      padding: '20px 30px',
+      borderRadius: '12px',
+      boxShadow: '0 8px 40px rgba(0, 0, 0, 0.15)',
+      padding: '30px 40px',
       textAlign: 'center',
       width: '90%',
-      maxWidth: '300px',
+      maxWidth: '350px',
     },
     heading: {
-      marginBottom: '10px',
-      fontSize: '24px',
+      marginBottom: '20px',
+      fontSize: '26px',
+      color: '#333',
     },
     subheading: {
       margin: '10px 0',
-      fontSize: '18px',
+      fontSize: '20px',
+      color: '#666',
     },
     button: {
       backgroundColor: '#4285f4',
       color: 'white',
       border: 'none',
       borderRadius: '5px',
-      padding: '10px 20px',
+      padding: '12px 25px',
       cursor: 'pointer',
       fontSize: '16px',
+      marginBottom: '15px',
       transition: 'background-color 0.3s',
     },
     buttonLogout: {
@@ -80,6 +111,16 @@ const LoginPage = () => {
       margin: '10px',
       cursor: 'pointer',
       fontSize: '16px',
+    },
+    changeRoleButton: {
+      marginTop: '20px',
+      padding: '8px 16px',
+      fontSize: '14px',
+      color: '#4caf50',
+      backgroundColor: 'transparent',
+      border: '1px solid #4caf50',
+      borderRadius: '5px',
+      cursor: 'pointer',
     },
   };
 
@@ -109,7 +150,7 @@ const LoginPage = () => {
                     </button>
                     <button
                       style={styles.roleButton}
-                      onClick={() => handleRoleSelect('Family member')}
+                      onClick={() => handleRoleSelect('Family Member')}
                     >
                       I am a Family Member
                     </button>
@@ -123,6 +164,12 @@ const LoginPage = () => {
                       onClick={logout}
                     >
                       Logout
+                    </button>
+                    <button
+                      style={styles.changeRoleButton}
+                      onClick={handleRoleChange}
+                    >
+                      Change Role
                     </button>
                   </div>
                 )}

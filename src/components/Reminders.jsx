@@ -1,10 +1,18 @@
 import React, { useState, useEffect } from "react";
-import { collection, addDoc, getDocs, updateDoc, deleteDoc, doc, query, where } from "firebase/firestore";
-import { db } from "./firebaseConfig";
-import { useFirebase } from "../context/Firebase";
+import {
+  collection,
+  addDoc,
+  getDocs,
+  updateDoc,
+  deleteDoc,
+  doc,
+  query,
+  where,
+} from "firebase/firestore";
+import { useFirebase } from "../context/Firebase"; // Use context to access Firebase
 
 const Reminders = () => {
-  const { user } = useFirebase(); // Get the logged-in user
+  const { user, db } = useFirebase(); // Get the logged-in user and Firestore database
   const [reminder, setReminder] = useState("");
   const [reminders, setReminders] = useState([]);
   const [editReminderId, setEditReminderId] = useState(null);
@@ -39,7 +47,7 @@ const Reminders = () => {
       createdAt: new Date(),
     });
     setReminder("");
-    fetchReminders();
+    fetchReminders(); // Refresh the list
   };
 
   // Update a reminder
@@ -50,7 +58,7 @@ const Reminders = () => {
     await updateDoc(reminderRef, { title: newTitle });
     setEditReminderId(null);
     setNewTitle("");
-    fetchReminders();
+    fetchReminders(); // Refresh the list
   };
 
   // Delete a reminder
@@ -59,23 +67,26 @@ const Reminders = () => {
 
     const reminderRef = doc(db, "reminders", id);
     await deleteDoc(reminderRef);
-    fetchReminders();
+    fetchReminders(); // Refresh the list
   };
 
   return (
-    <div>
+    <div style={styles.container}>
       <h1>Reminders</h1>
       <input
         type="text"
         value={reminder}
         onChange={(e) => setReminder(e.target.value)}
         placeholder="Add a reminder"
+        style={styles.input}
       />
-      <button onClick={addReminder}>Add Reminder</button>
+      <button onClick={addReminder} style={styles.button}>
+        Add Reminder
+      </button>
 
-      <ul>
+      <ul style={styles.reminderList}>
         {reminders.map((item) => (
-          <li key={item.id}>
+          <li key={item.id} style={styles.reminderItem}>
             {editReminderId === item.id ? (
               <>
                 <input
@@ -83,14 +94,21 @@ const Reminders = () => {
                   value={newTitle}
                   onChange={(e) => setNewTitle(e.target.value)}
                   placeholder="Update reminder"
+                  style={styles.input}
                 />
-                <button onClick={() => updateReminder(item.id)}>Save</button>
+                <button onClick={() => updateReminder(item.id)} style={styles.button}>
+                  Save
+                </button>
               </>
             ) : (
               <>
                 <span>{item.title}</span>
-                <button onClick={() => setEditReminderId(item.id)}>Edit</button>
-                <button onClick={() => deleteReminder(item.id)}>Delete</button>
+                <button onClick={() => setEditReminderId(item.id)} style={styles.button}>
+                  Edit
+                </button>
+                <button onClick={() => deleteReminder(item.id)} style={styles.button}>
+                  Delete
+                </button>
               </>
             )}
           </li>
@@ -98,6 +116,39 @@ const Reminders = () => {
       </ul>
     </div>
   );
+};
+
+// Styles
+const styles = {
+  container: {
+    padding: "20px",
+    maxWidth: "600px",
+    margin: "auto",
+    border: "1px solid #ccc",
+    borderRadius: "8px",
+  },
+  input: {
+    padding: "10px",
+    border: "1px solid #ccc",
+    borderRadius: "5px",
+    marginRight: "10px",
+  },
+  button: {
+    padding: "10px",
+    border: "1px solid #ccc",
+    borderRadius: "5px",
+    cursor: "pointer",
+  },
+  reminderList: {
+    listStyleType: "none",
+    padding: 0,
+  },
+  reminderItem: {
+    display: "flex",
+    alignItems: "center",
+    justifyContent: "space-between",
+    margin: "10px 0",
+  },
 };
 
 export default Reminders;

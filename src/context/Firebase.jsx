@@ -1,9 +1,8 @@
 // src/context/Firebase.jsx
-
 import React, { createContext, useContext, useEffect, useState } from 'react';
 import { initializeApp } from 'firebase/app';
 import { getAuth, GoogleAuthProvider, signInWithPopup, signOut } from 'firebase/auth';
-import { getFirestore, collection, addDoc } from 'firebase/firestore'; // Import Firestore
+import { getFirestore, collection, addDoc } from 'firebase/firestore'; 
 
 // Your Firebase configuration
 const firebaseConfig = {
@@ -28,6 +27,7 @@ export const useFirebase = () => useContext(FirebaseContext);
 export const FirebaseProvider = ({ children }) => {
   const [user, setUser] = useState(null);
 
+  // Function to sign in with Google
   const signInWithGoogle = async () => {
     try {
       const result = await signInWithPopup(auth, provider);
@@ -37,11 +37,13 @@ export const FirebaseProvider = ({ children }) => {
     }
   };
 
+  // Function to log out the user
   const logout = async () => {
     await signOut(auth);
     setUser(null);
   };
 
+  // Function to add a review for a caregiver
   const addReview = async (caregiverId, reviewText, rating) => {
     const reviewsCollection = collection(db, 'reviews');
     await addDoc(reviewsCollection, {
@@ -52,13 +54,15 @@ export const FirebaseProvider = ({ children }) => {
     });
   };
 
+  // Set up an effect to manage user state
   useEffect(() => {
     const unsubscribe = auth.onAuthStateChanged(setUser);
     return () => unsubscribe();
   }, []);
 
+  // Provide user and authentication functions to the context
   return (
-    <FirebaseContext.Provider value={{ user, signInWithGoogle, logout, db, addReview }}> {/* Expose Firestore db and addReview function */}
+    <FirebaseContext.Provider value={{ user, signInWithGoogle, logout, db, addReview }}>
       {children}
     </FirebaseContext.Provider>
   );
