@@ -18,6 +18,7 @@ function App() {
           <Route path="/dashboard" element={<Dashboard/>} />
           <Route path="/marketplace" element={<Marketplace/>} />
           <Route path="/login" element={<LoginPage/>} />
+          <Route path="/reminder" element={<LoginPage/>} />
         </Routes>
       </Router>
       </FirebaseProvider>
