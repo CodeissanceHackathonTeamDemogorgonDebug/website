@@ -3,21 +3,23 @@
 import React, { createContext, useContext, useEffect, useState } from 'react';
 import { initializeApp } from 'firebase/app';
 import { getAuth, GoogleAuthProvider, signInWithPopup, signOut } from 'firebase/auth';
+import { getFirestore, collection, addDoc } from 'firebase/firestore'; // Import Firestore
 
 // Your Firebase configuration
 const firebaseConfig = {
-    apiKey: "AIzaSyBpUXcH5ZXshC_Ihh1KM0G4yPmGh7YkvVE",
-    authDomain: "hackathon-elderly-thing.firebaseapp.com",
-    projectId: "hackathon-elderly-thing",
-    storageBucket: "hackathon-elderly-thing.appspot.com",
-    messagingSenderId: "41117400610",
-    appId: "1:41117400610:web:3e8a1463654e7723aa947b"
-  };
+  apiKey: "AIzaSyBpUXcH5ZXshC_Ihh1KM0G4yPmGh7YkvVE",
+  authDomain: "hackathon-elderly-thing.firebaseapp.com",
+  projectId: "hackathon-elderly-thing",
+  storageBucket: "hackathon-elderly-thing.appspot.com",
+  messagingSenderId: "41117400610",
+  appId: "1:41117400610:web:3e8a1463654e7723aa947b"
+};
 
 // Initialize Firebase
 const app = initializeApp(firebaseConfig);
 const auth = getAuth(app);
 const provider = new GoogleAuthProvider();
+const db = getFirestore(app); // Initialize Firestore
 
 const FirebaseContext = createContext();
 
@@ -40,13 +42,23 @@ export const FirebaseProvider = ({ children }) => {
     setUser(null);
   };
 
+  const addReview = async (caregiverId, reviewText, rating) => {
+    const reviewsCollection = collection(db, 'reviews');
+    await addDoc(reviewsCollection, {
+      caregiverId,
+      reviewText,
+      rating,
+      createdAt: new Date(),
+    });
+  };
+
   useEffect(() => {
     const unsubscribe = auth.onAuthStateChanged(setUser);
     return () => unsubscribe();
   }, []);
 
   return (
-    <FirebaseContext.Provider value={{ user, signInWithGoogle, logout }}>
+    <FirebaseContext.Provider value={{ user, signInWithGoogle, logout, db, addReview }}> {/* Expose Firestore db and addReview function */}
       {children}
     </FirebaseContext.Provider>
   );

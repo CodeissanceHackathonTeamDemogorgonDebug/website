@@ -1,14 +1,19 @@
-// src/components/LoginPage.jsx
-
-import React from 'react';
+import React, { useState } from 'react';
 import { useFirebase } from '../context/Firebase';
 import Navbar from '../components/Navbar';
 
 const LoginPage = () => {
   const { signInWithGoogle, user, logout } = useFirebase();
+  const [role, setRole] = useState(''); // To store the selected role
+  const [isRoleSelected, setIsRoleSelected] = useState(false); // To check if the role has been selected
 
   const handleLogin = () => {
     signInWithGoogle();
+  };
+
+  const handleRoleSelect = (selectedRole) => {
+    setRole(selectedRole);
+    setIsRoleSelected(true);
   };
 
   // Inline styles
@@ -36,8 +41,8 @@ const LoginPage = () => {
       boxShadow: '0 4px 30px rgba(0, 0, 0, 0.1)',
       padding: '20px 30px',
       textAlign: 'center',
-      width: '90%', // Responsive width
-      maxWidth: '300px', // Max width for larger screens
+      width: '90%',
+      maxWidth: '300px',
     },
     heading: {
       marginBottom: '10px',
@@ -66,41 +71,84 @@ const LoginPage = () => {
     buttonLogoutHover: {
       backgroundColor: '#e63939',
     },
+    roleButton: {
+      backgroundColor: '#4caf50',
+      color: 'white',
+      border: 'none',
+      borderRadius: '5px',
+      padding: '10px 20px',
+      margin: '10px',
+      cursor: 'pointer',
+      fontSize: '16px',
+    },
   };
 
   return (
-  <>
-  <Navbar/>
-    <div style={styles.body}>
-      <div style={styles.loginContainer}>
-        <div style={styles.loginCard}>
-          <h1 style={styles.heading}>Welcome</h1>
-          {user ? (
-            <div>
-              <h2 style={styles.subheading}>Hello, {user.displayName}</h2>
-              <button
-                style={{ ...styles.button, ...styles.buttonLogout }}
-                onClick={logout}
-              >
-                Logout
-              </button>
-            </div>
-          ) : (
-            <>
-              <h2 style={styles.subheading}>Please log in</h2>
-              <button
-                style={styles.button}
-                onClick={handleLogin}
-                onMouseEnter={(e) => (e.currentTarget.style.backgroundColor = styles.buttonHover.backgroundColor)}
-                onMouseLeave={(e) => (e.currentTarget.style.backgroundColor = styles.button.backgroundColor)}
-              >
-                Sign in with Google
-              </button>
-            </>
-          )}
+    <>
+      <Navbar />
+      <div style={styles.body}>
+        <div style={styles.loginContainer}>
+          <div style={styles.loginCard}>
+            <h1 style={styles.heading}>Welcome</h1>
+            {user ? (
+              <>
+                {!isRoleSelected ? (
+                  <div>
+                    <h2 style={styles.subheading}>Select your role</h2>
+                    <button
+                      style={styles.roleButton}
+                      onClick={() => handleRoleSelect('Patient')}
+                    >
+                      I am a Patient
+                    </button>
+                    <button
+                      style={styles.roleButton}
+                      onClick={() => handleRoleSelect('Caretaker')}
+                    >
+                      I am a Caretaker
+                    </button>
+                    <button
+                      style={styles.roleButton}
+                      onClick={() => handleRoleSelect('Family member')}
+                    >
+                      I am a Family Member
+                    </button>
+                  </div>
+                ) : (
+                  <div>
+                    <h2 style={styles.subheading}>Hello, {user.displayName}</h2>
+                    <h3 style={styles.subheading}>Role: {role}</h3>
+                    <button
+                      style={{ ...styles.button, ...styles.buttonLogout }}
+                      onClick={logout}
+                    >
+                      Logout
+                    </button>
+                  </div>
+                )}
+              </>
+            ) : (
+              <>
+                <h2 style={styles.subheading}>Please log in</h2>
+                <button
+                  style={styles.button}
+                  onClick={handleLogin}
+                  onMouseEnter={(e) =>
+                    (e.currentTarget.style.backgroundColor =
+                      styles.buttonHover.backgroundColor)
+                  }
+                  onMouseLeave={(e) =>
+                    (e.currentTarget.style.backgroundColor =
+                      styles.button.backgroundColor)
+                  }
+                >
+                  Sign in with Google
+                </button>
+              </>
+            )}
+          </div>
         </div>
       </div>
-    </div>
     </>
   );
 };

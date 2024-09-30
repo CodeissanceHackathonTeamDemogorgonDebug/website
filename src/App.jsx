@@ -1,6 +1,6 @@
 import { BrowserRouter as Router, Route, Routes } from 'react-router-dom';
 import Home from './pages/Home';
-import Caregiver from './pages/Caregiver';
+import Caregiver from './pages/CaregiverPage';
 import Dashboard from './pages/DashboardPage'; 
 import Navbar from './components/Navbar'; 
 import Marketplace from './pages/Marketplace';
@@ -18,7 +18,11 @@ function App() {
           <Route path="/dashboard" element={<Dashboard/>} />
           <Route path="/marketplace" element={<Marketplace/>} />
           <Route path="/login" element={<LoginPage/>} />
-          <Route path="/reminder" element={<LoginPage/>} />
+          <Route path="/reminder" element={<Home />} />
+          <Route path="/calls" element={<Home />} />
+          <Route path="/alerts" element={<Home />} />
+          <Route path="/health" element={<Home />} />
+          
         </Routes>
       </Router>
       </FirebaseProvider>
