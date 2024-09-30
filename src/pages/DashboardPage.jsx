@@ -1,9 +1,13 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import Navbar from "../components/Navbar";
-import { Link } from "react-router-dom"; // Import Link from react-router-dom
+import { Link } from "react-router-dom";
+import { useFirebase } from "../context/Firebase"; // Import useFirebase to access Firestore
+import { collection, getDocs } from "firebase/firestore";
 
 const Dashboard = () => {
+  const { db } = useFirebase();
   const [healthProgress, setHealthProgress] = useState(100);
+  const [upcomingEvents, setUpcomingEvents] = useState([]); // State to hold upcoming events
 
   const features = [
     { icon: "🔔", title: "Reminders", count: 3, route: "/reminder" },
@@ -12,11 +16,22 @@ const Dashboard = () => {
     { icon: "❤️", title: "Health", count: 1, route: "/health" },
   ];
 
-  const upcomingEvents = [
-    { icon: "📅", title: "Doctor's Appointment", time: "2:00 PM" },
-    { icon: "🔔", title: "Take Medication", time: "4:30 PM" },
-    { icon: "📞", title: "Call with Family", time: "6:00 PM" },
-  ];
+  // Fetch appointments from Firestore
+  useEffect(() => {
+    const fetchAppointments = async () => {
+      try {
+        const querySnapshot = await getDocs(collection(db, 'AppointmentRequest'));
+        const events = querySnapshot.docs.map(doc => ({
+          id: doc.id,
+          ...doc.data(),
+        }));
+        setUpcomingEvents(events);
+      } catch (error) {
+        console.error("Error fetching appointments: ", error);
+      }
+    };
+    fetchAppointments();
+  }, [db]);
 
   return (
     <>
@@ -31,7 +46,7 @@ const Dashboard = () => {
           {/* Features Section */}
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
             {features.map((feature, index) => (
-              <Link key={index} to={feature.route}> {/* Link to the corresponding route */}
+              <Link key={index} to={feature.route}>
                 <div className="bg-white p-6 rounded-lg shadow-lg text-center cursor-pointer">
                   <div className="text-2xl mb-4">{feature.icon}</div>
                   <h3 className="text-lg font-semibold">{feature.title}</h3>
@@ -70,21 +85,25 @@ const Dashboard = () => {
               <h2 className="text-xl font-bold mb-2">Upcoming Events</h2>
               <p className="text-gray-500 mb-4">Your schedule for today</p>
               <div className="space-y-4">
-                {upcomingEvents.map((event, index) => (
-                  <div
-                    key={index}
-                    className="flex items-center justify-between p-2 bg-gray-100 rounded-lg"
-                  >
-                    <div className="flex items-center">
-                      <span className="text-lg mr-4">{event.icon}</span>
-                      <div>
-                        <p className="font-semibold">{event.title}</p>
-                        <p className="text-gray-500">{event.time}</p>
+                {upcomingEvents.length === 0 ? (
+                  <p>No upcoming appointments</p>
+                ) : (
+                  upcomingEvents.map((event, index) => (
+                    <div
+                      key={index}
+                      className="flex items-center justify-between p-2 bg-gray-100 rounded-lg"
+                    >
+                      <div className="flex items-center">
+                        <span className="text-lg mr-4">📅</span>
+                        <div>
+                          <p className="font-semibold">{event.title || "Appointment"}</p>
+                          <p className="text-gray-500">{event.date && event.date.toDate().toLocaleString()}</p>
+                        </div>
                       </div>
+                      <span className="text-gray-400">{">"}</span>
                     </div>
-                    <span className="text-gray-400">{">"}</span>
-                  </div>
-                ))}
+                  ))
+                )}
               </div>
               <button className="mt-4 bg-transparent border border-gray-500 text-gray-500 px-4 py-2 w-full rounded-lg">
                 View All Events
