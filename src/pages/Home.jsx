@@ -64,6 +64,48 @@ const Home = () => {
           </Link>
         </div>
       </section>
+      <section style={styles.featuresSection}>
+  <h2 style={styles.subHead}>What Our Clients Say</h2>
+  <div style={styles.cardContainer}>
+    
+    <div className="card">
+      <span role="img" aria-label="client-review" style={styles.emoji}>👍</span>
+      <h3 style={styles.h3Card}>Life-Saving Care</h3>
+      <p style={styles.para}>
+        "CareMate has been a lifesaver for my family. The caregivers are always on time and provide the best care."
+      </p>
+      <h4 style={styles.clientName}>- John Doe</h4>
+    </div>
+    
+    <div className="card">
+      <span role="img" aria-label="client-review" style={styles.emoji}>🌟</span>
+      <h3 style={styles.h3Card}>Smart Reminders Help</h3>
+      <p style={styles.para}>
+        "I love the smart reminders feature. It ensures my mom never misses her medications."
+      </p>
+      <h4 style={styles.clientName}>- Sarah Lee</h4>
+    </div>
+
+    <div className="card">
+      <span role="img" aria-label="client-review" style={styles.emoji}>👨‍⚕️</span>
+      <h3 style={styles.h3Card}>Easy Doctor Access</h3>
+      <p style={styles.para}>
+        "The video call option with doctors has made it so much easier for my father to get consultations from home."
+      </p>
+      <h4 style={styles.clientName}>- Alice Brown</h4>
+    </div>
+
+    <div className="card">
+      <span role="img" aria-label="client-review" style={styles.emoji}>⚠️</span>
+      <h3 style={styles.h3Card}>Emergency Assistance</h3>
+      <p style={styles.para}>
+        "CareMate's emergency alert feature saved my grandmother's life when she needed immediate help."
+      </p>
+      <h4 style={styles.clientName}>- Michael Smith</h4>
+    </div>
+    
+  </div>
+</section>
 
       {/* Footer */}
       <footer style={styles.footer}>

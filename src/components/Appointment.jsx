@@ -3,6 +3,7 @@ import { useFirebase } from '../context/Firebase';
 import { collection, getDocs, doc, deleteDoc, addDoc, getDoc } from 'firebase/firestore';
 import './Appointment.css';
 import Navbar from './Navbar';
+import VideoCall from '../components/VideoCalling';  // Import the VideoCall component
 
 const Appointments = () => {
   const { db } = useFirebase();
@@ -176,9 +177,7 @@ const Appointments = () => {
                   <p><strong>Appointment Type:</strong> {appointmentType}</p>
                   <p><strong>Time:</strong> {formattedTime}</p>
                   <div className="video-call-section">
-                    <button className="video-call-button">
-                      Start Video Call
-                    </button>
+                    <VideoCall />  {/* Use VideoCall component here */}
                   </div>
                 </div>
               );
