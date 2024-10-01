@@ -10,6 +10,7 @@ import Reminders from './components/Reminders';
 import Appointments from './components/Appointment';
 import EmergencyAlert from './components/EmergencyAlert';
 import HealthData from './pages/HealthData';
+import Faqs from './pages/Faqs';
 // import { FirebaseProvider } from './context/Firebase';
 
 function App() {
@@ -26,6 +27,7 @@ function App() {
           <Route path="/calls" element={<Appointments />} />
           <Route path="/alerts" element={<EmergencyAlert />} />
           <Route path="/health" element={<HealthData/>} />
+          <Route path="/faqs" element={<Faqs/>} />
           
         </Routes>
       </Router>

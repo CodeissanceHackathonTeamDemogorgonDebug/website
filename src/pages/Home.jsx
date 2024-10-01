@@ -15,7 +15,7 @@ const Home = () => {
         <div style={styles.buttonGroup}>
           {/* Link Get Started to /login */}
           <Link to="/login" className="button primary">Get Started</Link>
-          <Link to="#fqs" className="button secondary">Learn More</Link> {/* Link to FAQs section */}
+          <Link to="faqs" className="button secondary">Learn More</Link> {/* Link to FAQs section */}
         </div>
       </header>
 
@@ -62,33 +62,6 @@ const Home = () => {
             <h3 style={styles.h3Card}>Video Call</h3>
             <p style={styles.para}>Connect with your doctor via secure video calls for convenient medical consultations.</p>
           </Link>
-        </div>
-      </section>
-
-
-      <section id="fqs" style={styles.fqsSection}> {/* Add id for linking */}
-        <h2 style={styles.subHead}>Frequently Asked Questions (FQS)</h2>
-        <div style={styles.cardContainer}>
-          {/* FQS Cards */}
-          <div className="card fqsCard">
-            <h3 style={styles.h3Card}>What services do you offer?</h3>
-            <p style={styles.para}>We provide a range of services including home care, medical reminders, and telehealth consultations.</p>
-          </div>
-
-          <div className="card fqsCard">
-            <h3 style={styles.h3Card}>How do I get started?</h3>
-            <p style={styles.para}>Click on 'Get Started' to create your account and explore our services.</p>
-          </div>
-
-          <div className="card fqsCard">
-            <h3 style={styles.h3Card}>Is there a subscription fee?</h3>
-            <p style={styles.para}>We offer flexible pricing plans tailored to your needs. Contact us for details.</p>
-          </div>
-
-          <div className="card fqsCard">
-            <h3 style={styles.h3Card}>Can I cancel my subscription?</h3>
-            <p style={styles.para}>Yes, you can cancel your subscription anytime without any hidden fees.</p>
-          </div>
         </div>
       </section>
 
