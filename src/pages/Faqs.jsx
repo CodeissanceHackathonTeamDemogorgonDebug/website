@@ -9,7 +9,7 @@ const Faqs = () => {
         <Navbar/>
     <div>
         <section id="fqs" style={styles.fqsSection}> {/* Add id for linking */}
-        <h2 style={styles.subHead}>Frequently Asked Questions (FQS)</h2>
+        <h2 style={styles.subHead}>Frequently Asked Questions (FAQS)</h2>
         <div style={styles.cardContainer}>
           {/* FQS Cards */}
           <div className="card fqsCard">
@@ -28,19 +28,20 @@ const Faqs = () => {
           </div>
 
           <div className="card fqsCard">
-            <h3 style={styles.h3Card}>Can I cancel my subscription?</h3>
-            <p style={styles.para}>Yes, you can cancel your subscription anytime without any hidden fees.</p>
-          </div>
+  <h3 style={styles.h3Card}>What makes CareMate different from other services?</h3>
+  <p style={styles.para}>CareMate provides personalized care with specialized caretakers, tailored health reminders, and real-time appointment management, all in one platform.</p>
+</div>
 
-          <div className="card fqsCard">
-            <h3 style={styles.h3Card}>Can I cancel my subscription?</h3>
-            <p style={styles.para}>Yes, you can cancel your subscription anytime without any hidden fees.</p>
-          </div>
+<div className="card fqsCard">
+  <h3 style={styles.h3Card}>How do health reminders work?</h3>
+  <p style={styles.para}>Our health reminders notify you of important tasks, like taking medication or attending appointments, based on your schedule.</p>
+</div>
 
-          <div className="card fqsCard">
-            <h3 style={styles.h3Card}>Can I cancel my subscription?</h3>
-            <p style={styles.para}>Yes, you can cancel your subscription anytime without any hidden fees.</p>
-          </div>
+<div className="card fqsCard">
+  <h3 style={styles.h3Card}>Do you offer telehealth consultations?</h3>
+  <p style={styles.para}>Yes, CareMate allows you to book and manage telehealth consultations directly through the platform, connecting you with healthcare professionals from the comfort of your home.</p>
+</div>
+
 
           
         </div>

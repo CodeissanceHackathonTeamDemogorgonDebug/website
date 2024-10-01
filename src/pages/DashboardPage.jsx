@@ -11,8 +11,8 @@ const Dashboard = () => {
   const [healthMetrics, setHealthMetrics] = useState({
     steps: 0,
     bloodPressure: '120/80', // example format
-    o2Levels: 98,
-    heartRate: 72,
+    o2Levels: 97,
+    heartRate: 61,
   });
 
   const features = [
